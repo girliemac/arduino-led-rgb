@@ -226,6 +226,11 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 
 
 
+@media (max-width: 420px) {
+	body {
+		margin: 1em 0.5em;
+	}
+}
 
 
 
