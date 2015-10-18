@@ -1,0 +1,88 @@
+<!doctype html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Hue-clone by PubNub</title>
+	<meta name="description" content="Pi House Demo">
+	<meta name="author" content="Tomomi Imura  @girlie_mac">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<header>
+		<img src="images/lego.png">
+		Poor man's <strong>Hue</strong>
+		<div class="pubnub"></div>
+	</header>
+
+
+	<section class="preference">
+
+		<div>
+			<div class="caption red">Red</div>
+			<label for="red" class="brightness fa">
+				<input id="red" type="range" min="0" max="255" step="1" value="155">
+			</label>
+		</div>
+
+		<div>
+			<div class="caption green">Green</div>
+			<label for="green" class="brightness fa">
+				<input id="green" type="range" min="0" max="255" step="1" value="0">
+			</label>
+		</div>
+		
+		<div>
+			<div class="caption blue">Blue</div>
+			<label for="blue" class="brightness fa">
+				<input id="blue" type="range" min="0" max="255" step="1" value="0">
+			</label>
+		</div>
+
+	</section>
+
+
+	<script src="http://cdn.pubnub.com/pubnub-3.7.15.min.js"></script>
+	<script>
+(function(){
+
+	var settings = {
+		channel: 'hue-clone',
+		publish_key: 'demo',
+		subscribe_key: 'demo'
+	};
+
+	var pubnub = PUBNUB(settings);
+
+	var red = document.getElementById('red');
+	var green = document.getElementById('green');
+	var blue = document.getElementById('blue');
+
+	function publishUpdate(data) {
+		pubnub.publish({
+			channel: settings.channel, 
+			message: data
+		});
+	}
+
+	// UI EVENTS
+
+	red.addEventListener('change', function(e){
+		publishUpdate({color: 'red', brightness: +this.value});
+	}, false);
+
+	green.addEventListener('change', function(e){
+		publishUpdate({color: 'green', brightness: +this.value});
+	}, false);
+
+	blue.addEventListener('change', function(e){
+		publishUpdate({color: 'blue', brightness: +this.value});
+	}, false);
+
+})();
+	</script>
+	
+</body>
+</html>
