@@ -1,7 +1,7 @@
 var five = require('johnny-five');
 
 var led;
-var r = 155;
+var r = 0;
 var b = 0;
 var g = 0;
 
