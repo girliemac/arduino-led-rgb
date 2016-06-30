@@ -1,6 +1,6 @@
 {
   "name": "arduino-led-rgb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Poor man's Hue",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "Tomomi Imura",
   "license": "MIT",
   "dependencies": {
-    "johnny-five": "^0.8.106",
+    "johnny-five": "^0.9.58",
     "pubnub": "^3.7.15"
   }
 }

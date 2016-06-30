@@ -1,88 +1,123 @@
 <!doctype html>
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-	<title>Hue-clone by PubNub</title>
-	<meta name="description" content="Pi House Demo">
-	<meta name="author" content="Tomomi Imura  @girlie_mac">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="css/style.css">
+  <title>Hue-clone by PubNub</title>
+  <meta name="description" content="Pi House Demo">
+  <meta name="author" content="Tomomi Imura  @girlie_mac">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-	<header>
-		<img src="images/lego.png">
-		Poor man's <strong>Hue</strong>
-		<div class="pubnub"></div>
-	</header>
+  <header>
+    <img src="images/lego.png">
+    Poor man's <strong>Hue</strong>
+    <div class="pubnub"></div>
+  </header>
 
 
-	<section class="preference">
+  <section class="preference">
 
-		<div>
-			<div class="caption red">Red</div>
-			<label for="red" class="brightness fa">
-				<input id="red" type="range" min="0" max="255" step="1" value="0">
-			</label>
-		</div>
+    <div>
+      <div class="caption red">Red</div>
+      <label for="red" class="brightness fa">
+        <input id="red" type="range" min="0" max="255" step="1" value="0">
+      </label>
+    </div>
 
-		<div>
-			<div class="caption green">Green</div>
-			<label for="green" class="brightness fa">
-				<input id="green" type="range" min="0" max="255" step="1" value="0">
-			</label>
-		</div>
-		
-		<div>
-			<div class="caption blue">Blue</div>
-			<label for="blue" class="brightness fa">
-				<input id="blue" type="range" min="0" max="255" step="1" value="0">
-			</label>
-		</div>
+    <div>
+      <div class="caption green">Green</div>
+      <label for="green" class="brightness fa">
+        <input id="green" type="range" min="0" max="255" step="1" value="0">
+      </label>
+    </div>
+    
+    <div>
+      <div class="caption blue">Blue</div>
+      <label for="blue" class="brightness fa">
+        <input id="blue" type="range" min="0" max="255" step="1" value="0">
+      </label>
+    </div>
 
-	</section>
+  </section>
 
 
-	<script src="http://cdn.pubnub.com/pubnub-3.7.15.min.js"></script>
-	<script>
+  <script src="http://cdn.pubnub.com/pubnub-3.7.15.min.js"></script>
+  <script>
 (function(){
 
-	var settings = {
-		channel: 'hue-clone',
-		publish_key: 'demo',
-		subscribe_key: 'demo'
-	};
+  var pubnub = PUBNUB.init({
+    publish_key: 'pub-c-0b43969b-341d-41f5-a85e-0bd9d30404b8',
+    subscribe_key: 'sub-c-cb24903e-c9f4-11e5-b684-02ee2ddab7fe'
+  });
 
-	var pubnub = PUBNUB(settings);
+  var channel = 'hue-clone';
 
-	var red = document.getElementById('red');
-	var green = document.getElementById('green');
-	var blue = document.getElementById('blue');
+  var red = document.getElementById('red');
+  var green = document.getElementById('green');
+  var blue = document.getElementById('blue');
 
-	function publishUpdate(data) {
-		pubnub.publish({
-			channel: settings.channel, 
-			message: data
-		});
-	}
+  // Initial brightness state
+  var brightness = {r: 0, g: 0, b: 0}; 
 
-	// UI EVENTS
 
-	red.addEventListener('change', function(e){
-		publishUpdate({color: 'red', brightness: +this.value});
-	}, false);
+  // UI Reset: Subscribe data from all subscibers of the channel to set the state correctly
 
-	green.addEventListener('change', function(e){
-		publishUpdate({color: 'green', brightness: +this.value});
-	}, false);
+  pubnub.subscribe({
+    channel: channel,
+    message: resetSliders, // reset the slider UI every time a subscriber makes a change
+    connect: initSliders // initialize the slider states for the fisrt time launching the app
+  });
 
-	blue.addEventListener('change', function(e){
-		publishUpdate({color: 'blue', brightness: +this.value});
-	}, false);
+  function resetSliders(m) {
+    red.value = brightness.r = m.r;
+    green.value = brightness.g = m.g;
+    blue.value = brightness.b = m.b;
+  }
+
+  function initSliders() {
+    pubnub.history({
+      channel: channel,
+      count: 1,
+      callback: function(messages) {
+        messages[0].forEach(function(m) {
+          console.log(m);
+          resetSliders(m);
+        });
+      }
+    });
+  }
+
+  function publishUpdate(data) {
+    console.log(data);
+
+    pubnub.publish({
+      channel: channel, 
+      message: data
+    });
+  }
+
+  // UI EVENTS
+
+  red.addEventListener('change', function(e){
+    brightness.r = this.value;
+    publishUpdate(brightness);
+  }, false);
+
+  green.addEventListener('change', function(e){
+    brightness.g = this.value;
+    publishUpdate(brightness);
+  }, false);
+
+  blue.addEventListener('change', function(e){
+    brightness.b = this.value;
+    publishUpdate(brightness);
+  }, false);
 
 })();
-	</script>
-	
+  </script>
+  
 </body>
 </html>
