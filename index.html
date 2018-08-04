@@ -44,80 +44,107 @@
   </section>
 
 
-  <script src="http://cdn.pubnub.com/pubnub-3.7.15.min.js"></script>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.21.2.min.js"></script>
   <script>
-(function(){
+    (function(){
+      var pubnub = new PubNub({
+        publishKey: 'pub-c-0b43969b-341d-41f5-a85e-0bd9d30404b8',
+        subscribeKey: 'sub-c-cb24903e-c9f4-11e5-b684-02ee2ddab7fe',
+        ssl: true // may need to set to false if your board doesn't support https (SSL/TLS)
+      });
 
-  var pubnub = PUBNUB.init({
-    publish_key: 'pub-c-0b43969b-341d-41f5-a85e-0bd9d30404b8',
-    subscribe_key: 'sub-c-cb24903e-c9f4-11e5-b684-02ee2ddab7fe'
-  });
+      var channel = 'hue-clone';
 
-  var channel = 'hue-clone';
+      var red = document.getElementById('red');
+      var green = document.getElementById('green');
+      var blue = document.getElementById('blue');
 
-  var red = document.getElementById('red');
-  var green = document.getElementById('green');
-  var blue = document.getElementById('blue');
-
-  // Initial brightness state
-  var brightness = {r: 0, g: 0, b: 0}; 
+    // Initial brightness state
+    var brightness = {r: 0, g: 0, b: 0}; 
 
 
-  // UI Reset: Subscribe data from all subscibers of the channel to set the state correctly
+    // UI Reset: Subscribe data from all subscibers of the channel to set the state correctly
 
-  pubnub.subscribe({
-    channel: channel,
-    message: resetSliders, // reset the slider UI every time a subscriber makes a change
-    connect: initSliders // initialize the slider states for the fisrt time launching the app
-  });
+    pubnub.subscribe({
+      channels: [channel]
+    });
 
-  function resetSliders(m) {
-    red.value = brightness.r = m.r;
-    green.value = brightness.g = m.g;
-    blue.value = brightness.b = m.b;
-  }
-
-  function initSliders() {
-    pubnub.history({
-      channel: channel,
-      count: 1,
-      callback: function(messages) {
-        messages[0].forEach(function(m) {
-          console.log(m);
-          resetSliders(m);
-        });
+    pubnub.addListener({
+      message: function(message) {
+        resetSliders(message);
+      },
+      status: function(statusEvent) {
+        if (statusEvent.category === "PNConnectedCategory") {
+          initSliders();
+        }
       }
     });
-  }
 
-  function publishUpdate(data) {
-    console.log(data);
+    function resetSliders(m) {
+      red.value = brightness.r = m.r;
+      green.value = brightness.g = m.g;
+      blue.value = brightness.b = m.b;
+    }
 
-    pubnub.publish({
-      channel: channel, 
-      message: data
-    });
-  }
+    function initSliders() {
 
-  // UI EVENTS
+      pubnub.history(
+        {
+            channel: channel,
+            count: 1
+        },
+        function (status, response) {
+          var msgs = response.messages;
+          if (msgs != undefined && msgs.length > 0) {
+            // only 1 message fetched, so use element 0 to get it
+            msgs[0].forEach(function(m) {
+              // loop through the elements of the "brightness" message: r, g & b
+              // and reset the Sliders
+              console.log(m);
+              resetSliders(m);
+            });
+          }
+        }
+      );
+    }
 
-  red.addEventListener('change', function(e){
-    brightness.r = this.value;
-    publishUpdate(brightness);
-  }, false);
+    function publishUpdate(data) {
+      console.log(data);
+      pubnub.publish(
+      {
+        channel: channel,
+        message: data
+      }, 
+      function (status, response) {
+        if (status.error) {
+          console.log(status)
+        } 
+        else {
+          console.log("message Published w/ timetoken", response.timetoken)
+        }
+      }
+      );
+    }
 
-  green.addEventListener('change', function(e){
-    brightness.g = this.value;
-    publishUpdate(brightness);
-  }, false);
 
-  blue.addEventListener('change', function(e){
-    brightness.b = this.value;
-    publishUpdate(brightness);
-  }, false);
+    // UI EVENTS
 
+    red.addEventListener('change', function(e){
+      brightness.r = this.value;
+      publishUpdate(brightness);
+    }, false);
+
+    green.addEventListener('change', function(e){
+      brightness.g = this.value;
+      publishUpdate(brightness);
+    }, false);
+
+    blue.addEventListener('change', function(e){
+      brightness.b = this.value;
+      publishUpdate(brightness);
+    }, false);
 })();
-  </script>
-  
+</script>
+
 </body>
 </html>
